@@ -5,6 +5,16 @@ import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import AssessmentForm from './components/AssessmentForm';
 import AssessmentHistory from './components/AssessmentHistory';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboard from './components/admin/AdminDashboard';
+import AdminUsers from './components/admin/AdminUsers';
+import AdminUserDetails from './components/admin/AdminUserDetails';
+import AdminAssessments from './components/admin/AdminAssessments';
+import NutritionistLayout from './components/nutritionist/NutritionistLayout';
+import NutritionistDashboard from './components/nutritionist/NutritionistDashboard';
+import NutritionistUsers from './components/nutritionist/NutritionistUsers';
+import NutritionistUserDetails from './components/nutritionist/NutritionistUserDetails';
+import NutritionistAssessments from './components/nutritionist/NutritionistAssessments';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -33,7 +43,7 @@ function App() {
   };
 
   if (loading) {
-    return (
+  return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-xl">Cargando...</div>
       </div>
@@ -80,6 +90,39 @@ function App() {
           )
         }
       />
+      {/* Admin Routes */}
+      <Route
+        path="/admin"
+        element={
+          user && (user.roles?.includes('super_admin') || user.roles?.includes('admin')) ? (
+            <AdminLayout user={user} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/dashboard" />
+          )
+        }
+      >
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="users/:id" element={<AdminUserDetails />} />
+        <Route path="assessments" element={<AdminAssessments />} />
+      </Route>
+
+      {/* Nutritionist Routes */}
+      <Route
+        path="/nutritionist"
+        element={
+          user && user.roles?.includes('nutritionist') ? (
+            <NutritionistLayout user={user} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/dashboard" />
+          )
+        }
+      >
+        <Route path="dashboard" element={<NutritionistDashboard />} />
+        <Route path="users" element={<NutritionistUsers />} />
+        <Route path="users/:id" element={<NutritionistUserDetails />} />
+        <Route path="assessments" element={<NutritionistAssessments />} />
+      </Route>
       <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
     </Routes>
   );

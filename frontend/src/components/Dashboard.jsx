@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { BarChart3 } from 'lucide-react';
 
 function Dashboard({ user, onLogout }) {
   const navigate = useNavigate();
@@ -31,6 +32,22 @@ function Dashboard({ user, onLogout }) {
               </h1>
             </div>
             <div className="flex items-center space-x-4">
+              {(user.roles?.includes('super_admin') || user.roles?.includes('admin')) && (
+                <Link
+                  to="/admin/dashboard"
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  Panel Admin
+                </Link>
+              )}
+              {user.roles?.includes('nutritionist') && (
+                <Link
+                  to="/nutritionist/dashboard"
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  Panel Nutricionista
+                </Link>
+              )}
               <div className="hidden sm:flex items-center space-x-2 px-4 py-2 bg-indigo-50 rounded-full">
                 <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                   {user.name.charAt(0).toUpperCase()}
@@ -152,7 +169,7 @@ function Dashboard({ user, onLogout }) {
           {/* Info Cards */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-100">
             <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-              <span className="mr-3">📊</span>
+              <BarChart3 className="w-6 h-6 mr-3 text-indigo-600" />
               ¿Qué es FitBalance?
             </h3>
             <p className="text-gray-600 mb-8 text-lg leading-relaxed">

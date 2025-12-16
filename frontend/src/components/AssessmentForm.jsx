@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BarChart3, Zap, Flame, TrendingUp, TrendingDown, Scale, Apple, Dumbbell, Sofa, AlertTriangle } from 'lucide-react';
+import AssessmentNotesView from './AssessmentNotesView';
 import api from '../services/api';
 
 function AssessmentForm({ user }) {
@@ -17,11 +19,11 @@ function AssessmentForm({ user }) {
   const [result, setResult] = useState(null);
 
   const activityLevels = [
-    { value: 'sedentary', label: 'Sedentario (poco o ningún ejercicio)', icon: '🛋️' },
-    { value: 'light', label: 'Ligero (ejercicio 1-3 días/semana)', icon: '🚶' },
-    { value: 'moderate', label: 'Moderado (ejercicio 3-5 días/semana)', icon: '🏃' },
-    { value: 'active', label: 'Activo (ejercicio 6-7 días/semana)', icon: '💪' },
-    { value: 'very_active', label: 'Muy activo (ejercicio 2 veces al día)', icon: '🔥' },
+    { value: 'sedentary', label: 'Sedentario (poco o ningún ejercicio)' },
+    { value: 'light', label: 'Ligero (ejercicio 1-3 días/semana)' },
+    { value: 'moderate', label: 'Moderado (ejercicio 3-5 días/semana)' },
+    { value: 'active', label: 'Activo (ejercicio 6-7 días/semana)' },
+    { value: 'very_active', label: 'Muy activo (ejercicio 2 veces al día)' },
   ];
 
   const handleSubmit = async (e) => {
@@ -76,7 +78,7 @@ function AssessmentForm({ user }) {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Índice de Masa Corporal</h3>
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <span className="text-2xl">📊</span>
+                    <BarChart3 className="w-6 h-6" />
                   </div>
                 </div>
                 <p className="text-5xl font-bold mb-2">{result.assessment.bmi}</p>
@@ -87,7 +89,7 @@ function AssessmentForm({ user }) {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Gasto Energético Basal</h3>
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <span className="text-2xl">⚡</span>
+                    <Zap className="w-6 h-6" />
                   </div>
                 </div>
                 <p className="text-5xl font-bold mb-2">{result.assessment.geb}</p>
@@ -98,7 +100,7 @@ function AssessmentForm({ user }) {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Gasto Energético Total</h3>
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <span className="text-2xl">🔥</span>
+                    <Flame className="w-6 h-6" />
                   </div>
                 </div>
                 <p className="text-5xl font-bold mb-2">{result.assessment.get}</p>
@@ -115,9 +117,13 @@ function AssessmentForm({ user }) {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Balance Calórico</h3>
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <span className="text-2xl">
-                      {result.assessment.caloric_balance > 0 ? '⬆️' : result.assessment.caloric_balance < 0 ? '⬇️' : '⚖️'}
-                    </span>
+                    {result.assessment.caloric_balance > 0 ? (
+                      <TrendingUp className="w-6 h-6" />
+                    ) : result.assessment.caloric_balance < 0 ? (
+                      <TrendingDown className="w-6 h-6" />
+                    ) : (
+                      <Scale className="w-6 h-6" />
+                    )}
                   </div>
                 </div>
                 <p className="text-5xl font-bold mb-2">
@@ -139,7 +145,7 @@ function AssessmentForm({ user }) {
               {nutritionRecs.length > 0 && (
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
                   <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-                    <span className="mr-3 text-3xl">🍎</span>
+                    <Apple className="w-6 h-6 mr-3 text-gray-600" />
                     Recomendaciones Nutricionales
                   </h3>
                   <div className="space-y-3">
@@ -155,7 +161,7 @@ function AssessmentForm({ user }) {
               {exerciseRecs.length > 0 && (
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
                   <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-                    <span className="mr-3 text-3xl">💪</span>
+                    <Dumbbell className="w-6 h-6 mr-3 text-gray-600" />
                     Recomendaciones de Ejercicio
                   </h3>
                   <div className="space-y-3">
@@ -166,6 +172,11 @@ function AssessmentForm({ user }) {
                     ))}
                   </div>
                 </div>
+              )}
+
+              {/* Nutritionist Notes - Solo lectura para usuarios */}
+              {result.assessment.id && (
+                <AssessmentNotesView assessmentId={result.assessment.id} />
               )}
             </div>
 
@@ -317,7 +328,7 @@ function AssessmentForm({ user }) {
               >
                 {activityLevels.map((level) => (
                   <option key={level.value} value={level.value}>
-                    {level.icon} {level.label}
+                    {level.label}
                   </option>
                 ))}
               </select>

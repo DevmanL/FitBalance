@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BarChart3, ClipboardList, Zap, Flame, TrendingUp, TrendingDown, Scale, Apple, Dumbbell } from 'lucide-react';
+import AssessmentNotesView from './AssessmentNotesView';
 import api from '../services/api';
 
 function AssessmentHistory({ user }) {
@@ -88,7 +90,7 @@ function AssessmentHistory({ user }) {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">IMC</h3>
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <span className="text-2xl">📊</span>
+                    <BarChart3 className="w-6 h-6" />
                   </div>
                 </div>
                 <p className="text-5xl font-bold mb-2">{bmiValue.toFixed(1)}</p>
@@ -99,7 +101,7 @@ function AssessmentHistory({ user }) {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">GEB</h3>
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <span className="text-2xl">⚡</span>
+                    <Zap className="w-6 h-6" />
                   </div>
                 </div>
                 <p className="text-5xl font-bold mb-2">{selectedAssessment.geb}</p>
@@ -110,7 +112,7 @@ function AssessmentHistory({ user }) {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">GET</h3>
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <span className="text-2xl">🔥</span>
+                    <Flame className="w-6 h-6" />
                   </div>
                 </div>
                 <p className="text-5xl font-bold mb-2">{selectedAssessment.get}</p>
@@ -127,9 +129,13 @@ function AssessmentHistory({ user }) {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Balance Calórico</h3>
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <span className="text-2xl">
-                      {selectedAssessment.caloric_balance > 0 ? '⬆️' : selectedAssessment.caloric_balance < 0 ? '⬇️' : '⚖️'}
-                    </span>
+                    {selectedAssessment.caloric_balance > 0 ? (
+                      <TrendingUp className="w-6 h-6" />
+                    ) : selectedAssessment.caloric_balance < 0 ? (
+                      <TrendingDown className="w-6 h-6" />
+                    ) : (
+                      <Scale className="w-6 h-6" />
+                    )}
                   </div>
                 </div>
                 <p className="text-5xl font-bold mb-2">
@@ -168,7 +174,7 @@ function AssessmentHistory({ user }) {
               {nutritionRecs.length > 0 && (
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
                   <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-                    <span className="mr-3 text-3xl">🍎</span>
+                    <Apple className="w-6 h-6 mr-3 text-gray-600" />
                     Recomendaciones Nutricionales
                   </h3>
                   <div className="space-y-3">
@@ -184,7 +190,7 @@ function AssessmentHistory({ user }) {
               {exerciseRecs.length > 0 && (
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
                   <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-                    <span className="mr-3 text-3xl">💪</span>
+                    <Dumbbell className="w-6 h-6 mr-3 text-gray-600" />
                     Recomendaciones de Ejercicio
                   </h3>
                   <div className="space-y-3">
@@ -196,6 +202,9 @@ function AssessmentHistory({ user }) {
                   </div>
                 </div>
               )}
+
+              {/* Nutritionist Notes - Solo lectura para usuarios */}
+              <AssessmentNotesView assessmentId={selectedAssessment.id} />
             </div>
           </div>
         </div>
@@ -241,7 +250,7 @@ function AssessmentHistory({ user }) {
         {assessments.length === 0 ? (
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-12 text-center border border-gray-100">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl">📋</span>
+              <ClipboardList className="w-12 h-12 text-gray-400" />
             </div>
             <p className="text-gray-600 text-lg mb-2">No tienes valoraciones aún</p>
             <p className="text-gray-500 text-sm mb-6">Crea tu primera valoración para comenzar a trackear tu progreso</p>

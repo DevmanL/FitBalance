@@ -27,10 +27,18 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Assign default 'user' role
+        $user->assignRole('user');
+
         $token = $user->createToken('auth_token')->plainTextToken;
+        $user->load('roles', 'permissions');
 
         return response()->json([
-            'user' => $user,
+            'user' => [
+                ...$user->toArray(),
+                'roles' => $user->getRoleNames(),
+                'permissions' => $user->getAllPermissions()->pluck('name'),
+            ],
             'token' => $token,
             'token_type' => 'Bearer',
         ], 201);
@@ -55,9 +63,14 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
+        $user->load('roles', 'permissions');
 
         return response()->json([
-            'user' => $user,
+            'user' => [
+                ...$user->toArray(),
+                'roles' => $user->getRoleNames(),
+                'permissions' => $user->getAllPermissions()->pluck('name'),
+            ],
             'token' => $token,
             'token_type' => 'Bearer',
         ]);
@@ -80,6 +93,13 @@ class AuthController extends Controller
      */
     public function user(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+        $user->load('roles', 'permissions');
+        
+        return response()->json([
+            'user' => $user,
+            'roles' => $user->getRoleNames(),
+            'permissions' => $user->getAllPermissions()->pluck('name'),
+        ]);
     }
 }

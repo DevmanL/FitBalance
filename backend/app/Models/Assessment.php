@@ -45,4 +45,12 @@ class Assessment extends Model
     {
         return $this->hasMany(Recommendation::class);
     }
+
+    /**
+     * Get the nutritionist notes for the assessment.
+     */
+    public function nutritionistNotes(): HasMany
+    {
+        return $this->hasMany(NutritionistNote::class);
+    }
 }
