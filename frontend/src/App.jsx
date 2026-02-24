@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
+import Profile from './components/Profile';
 import AssessmentForm from './components/AssessmentForm';
 import AssessmentHistory from './components/AssessmentHistory';
 import AdminLayout from './components/admin/AdminLayout';
@@ -69,6 +70,10 @@ function App() {
             <Navigate to="/login" />
           )
         }
+      />
+      <Route
+        path="/profile"
+        element={user ? <Profile user={user} /> : <Navigate to="/login" />}
       />
       <Route
         path="/assessment"

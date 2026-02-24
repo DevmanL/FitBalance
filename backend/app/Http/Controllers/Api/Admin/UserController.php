@@ -15,7 +15,12 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::with('roles', 'assessments');
+        $query = User::with('roles', 'assessments', 'assignedNutritionist:id,name,email');
+
+        // Nutritionists only see their assigned clients; super_admin sees all
+        if ($request->user()->hasRole('nutritionist') && !$request->user()->hasRole('super_admin')) {
+            $query->where('assigned_nutritionist_id', $request->user()->id);
+        }
 
         // Search
         if ($request->has('search')) {
@@ -80,11 +85,24 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
-        $user = User::with(['roles', 'permissions', 'assessments' => function ($query) {
-            $query->orderBy('created_at', 'desc')->limit(10);
-        }])->findOrFail($id);
+        $user = User::with([
+            'roles',
+            'permissions',
+            'assessments' => function ($query) {
+                $query->orderBy('created_at', 'desc')->limit(10);
+            },
+            'assignedNutritionist:id,name,email',
+            'profile',
+        ])->findOrFail($id);
+
+        // Nutritionists can only view their assigned clients
+        if ($request->user()->hasRole('nutritionist') && !$request->user()->hasRole('super_admin')) {
+            if ((int) $user->assigned_nutritionist_id !== (int) $request->user()->id) {
+                return response()->json(['message' => 'No tienes acceso a este usuario.'], 403);
+            }
+        }
 
         return response()->json([
             'user' => $user,
@@ -110,6 +128,7 @@ class UserController extends Controller
             'password' => 'sometimes|string|min:8|confirmed',
             'roles' => 'nullable|array',
             'roles.*' => 'string|exists:roles,name',
+            'assigned_nutritionist_id' => 'nullable|exists:users,id',
         ]);
 
         if (isset($validated['name'])) {
@@ -122,6 +141,11 @@ class UserController extends Controller
 
         if (isset($validated['password'])) {
             $user->password = Hash::make($validated['password']);
+        }
+
+        // Only super_admin can assign nutritionist; never assign to super_admin or nutritionist (they manage the platform)
+        if ($request->user()->hasRole('super_admin') && array_key_exists('assigned_nutritionist_id', $validated) && !$user->hasRole('super_admin') && !$user->hasRole('nutritionist')) {
+            $user->assigned_nutritionist_id = $validated['assigned_nutritionist_id'];
         }
 
         $user->save();

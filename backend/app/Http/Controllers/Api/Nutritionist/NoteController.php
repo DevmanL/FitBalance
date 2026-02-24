@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Nutritionist;
 use App\Http\Controllers\Controller;
 use App\Models\Assessment;
 use App\Models\NutritionistNote;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -16,18 +17,21 @@ class NoteController extends Controller
      */
     public function index(Request $request, $assessmentId)
     {
-        $assessment = Assessment::findOrFail($assessmentId);
+        $assessment = Assessment::with('user')->findOrFail($assessmentId);
         $user = $request->user();
-        
-        // If user is not a nutritionist, verify the assessment belongs to them
-        if (!$user->hasRole('nutritionist')) {
-            if ($assessment->user_id !== $user->id) {
+
+        if ($user->hasRole('nutritionist')) {
+            if ((int) $assessment->user->assigned_nutritionist_id !== (int) $user->id) {
                 return response()->json([
-                    'message' => 'You can only view notes for your own assessments.',
+                    'message' => 'Solo puedes ver anotaciones de valoraciones de tus clientes.',
                 ], 403);
             }
+        } elseif ($assessment->user_id !== $user->id) {
+            return response()->json([
+                'message' => 'You can only view notes for your own assessments.',
+            ], 403);
         }
-        
+
         $notes = NutritionistNote::where('assessment_id', $assessmentId)
             ->with('nutritionist:id,name,email')
             ->orderBy('created_at', 'desc')
@@ -41,6 +45,14 @@ class NoteController extends Controller
      */
     public function byUser(Request $request, $userId)
     {
+        $authUser = $request->user();
+        if ($authUser->hasRole('nutritionist')) {
+            $client = User::find($userId);
+            if (!$client || (int) $client->assigned_nutritionist_id !== (int) $authUser->id) {
+                return response()->json(['message' => 'Solo puedes ver anotaciones de tus clientes.'], 403);
+            }
+        }
+
         $notes = NutritionistNote::whereHas('assessment', function ($query) use ($userId) {
             $query->where('user_id', $userId);
         })
@@ -67,13 +79,18 @@ class NoteController extends Controller
             ], 422);
         }
 
-        $assessment = Assessment::findOrFail($assessmentId);
+        $assessment = Assessment::with('user')->findOrFail($assessmentId);
         $nutritionist = $request->user();
 
-        // Verify user has nutritionist role
         if (!$nutritionist->hasRole('nutritionist')) {
             return response()->json([
                 'message' => 'Only nutritionists can create notes.',
+            ], 403);
+        }
+
+        if ((int) $assessment->user->assigned_nutritionist_id !== (int) $nutritionist->id) {
+            return response()->json([
+                'message' => 'Solo puedes crear anotaciones en valoraciones de tus clientes.',
             ], 403);
         }
 

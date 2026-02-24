@@ -23,6 +23,8 @@ FitBalance utiliza un sistema de roles y permisos basado en Spatie Laravel Permi
 - ✅ Generación de reportes
 - ✅ Configuración de permisos
 
+**Dashboard:** Ve estadísticas generales y además **estadísticas por nutricionista** (clientes por profesional, anotaciones, recomendaciones, engagement).
+
 **Uso:** Administrador principal del sistema con acceso ilimitado.
 
 ---
@@ -49,21 +51,24 @@ FitBalance utiliza un sistema de roles y permisos basado en Spatie Laravel Permi
 
 ### 3. **Nutritionist** (`nutritionist`)
 
-**Función Principal:** Gestión de valoraciones y seguimiento de clientes
+**Función Principal:** Gestión de valoraciones y seguimiento de **sus** clientes
 
 **Permisos:**
-- ✅ Ver todos los usuarios del sistema
-- ✅ Ver todas las valoraciones
-- ✅ Crear y editar valoraciones
+- ✅ Ver **solo los usuarios (clientes) asignados a él/ella**
+- ✅ Ver **solo las valoraciones de sus clientes**
+- ✅ Crear y editar valoraciones (de sus clientes)
 - ✅ Ver, crear y editar recomendaciones
-- ✅ Agregar anotaciones personalizadas a valoraciones
-- ✅ Ver analytics básicos
+- ✅ Agregar anotaciones personalizadas **solo en valoraciones de sus clientes**
+- ✅ Ver analytics básicos (solo de sus clientes)
 - ✅ Acceso al panel de nutricionista
 - ❌ No puede eliminar valoraciones
 - ❌ No puede crear, editar o eliminar usuarios
 - ❌ No puede asignar roles
+- ❌ No puede ver usuarios ni valoraciones de otros nutricionistas
 
-**Uso:** Nutricionista o entrenador que gestiona las valoraciones de los clientes y proporciona seguimiento personalizado.
+**Asignación de clientes:** El **Super Admin** asigna cada usuario (cliente) a un nutricionista desde Gestión de Usuarios. Cada nutricionista solo ve y gestiona sus propios clientes.
+
+**Uso:** Nutricionista o entrenador que gestiona las valoraciones de sus clientes y proporciona seguimiento personalizado.
 
 **Panel Especial:** Tiene acceso a `/nutritionist/dashboard` con funcionalidades específicas para nutricionistas.
 

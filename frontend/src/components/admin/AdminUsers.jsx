@@ -4,15 +4,27 @@ import api from '../../services/api';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
+  const [nutritionists, setNutritionists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState(''); // '' = todos, 'user' = solo usuarios/clientes, 'nutritionist' = solo nutricionistas
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const isSuperAdmin = currentUser?.roles?.includes('super_admin');
 
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, search]);
+  }, [currentPage, search, roleFilter]);
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      api.get('/admin/users', { params: { role: 'nutritionist', per_page: 200 } })
+        .then((res) => setNutritionists(res.data.data || []))
+        .catch(() => setNutritionists([]));
+    }
+  }, [isSuperAdmin]);
 
   const fetchUsers = async () => {
     try {
@@ -21,6 +33,7 @@ const AdminUsers = () => {
         page: currentPage,
         per_page: 15,
         ...(search && { search }),
+        ...(roleFilter && { role: roleFilter }),
       };
       const response = await api.get('/admin/users', { params });
       setUsers(response.data.data || []);
@@ -46,6 +59,17 @@ const AdminUsers = () => {
     }
   };
 
+  const handleAssignNutritionist = async (userId, nutritionistId) => {
+    try {
+      await api.put(`/admin/users/${userId}`, {
+        assigned_nutritionist_id: nutritionistId || null,
+      });
+      fetchUsers();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error al asignar nutricionista');
+    }
+  };
+
   if (loading && users.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -63,8 +87,34 @@ const AdminUsers = () => {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
+      {/* Filtro por rol y búsqueda */}
+      <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100 space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm font-medium text-gray-700">Filtrar por tipo:</span>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => { setRoleFilter(''); setCurrentPage(1); }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${roleFilter === '' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              Todos
+            </button>
+            <button
+              type="button"
+              onClick={() => { setRoleFilter('user'); setCurrentPage(1); }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${roleFilter === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              Usuarios (clientes)
+            </button>
+            <button
+              type="button"
+              onClick={() => { setRoleFilter('nutritionist'); setCurrentPage(1); }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${roleFilter === 'nutritionist' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              Nutricionistas
+            </button>
+          </div>
+        </div>
         <input
           type="text"
           placeholder="Buscar por nombre o email..."
@@ -92,6 +142,9 @@ const AdminUsers = () => {
                 <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Usuario</th>
                 <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Email</th>
                 <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Roles</th>
+                {isSuperAdmin && (
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Nutricionista asignado</th>
+                )}
                 <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Valoraciones</th>
                 <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Registro</th>
                 <th className="text-right py-4 px-6 text-sm font-semibold text-gray-700">Acciones</th>
@@ -137,6 +190,25 @@ const AdminUsers = () => {
                       )}
                     </div>
                   </td>
+                  {isSuperAdmin && (
+                    <td className="py-4 px-6">
+                      {(user.roles || []).some((r) => (typeof r === 'string' ? r : r?.name) === 'super_admin') ||
+                       (user.roles || []).some((r) => (typeof r === 'string' ? r : r?.name) === 'nutritionist') ? (
+                        <span className="text-gray-400 text-sm">—</span>
+                      ) : (
+                        <select
+                          value={user.assigned_nutritionist_id ?? ''}
+                          onChange={(e) => handleAssignNutritionist(user.id, e.target.value || null)}
+                          className="text-sm border border-gray-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-500"
+                        >
+                          <option value="">Sin asignar</option>
+                          {nutritionists.map((n) => (
+                            <option key={n.id} value={n.id}>{n.name} ({n.email})</option>
+                          ))}
+                        </select>
+                      )}
+                    </td>
+                  )}
                   <td className="py-4 px-6">
                     <span className="text-gray-600">{user.assessments?.length || 0}</span>
                   </td>

@@ -15,6 +15,13 @@ class AssessmentController extends Controller
     {
         $query = Assessment::with('user:id,name,email');
 
+        // Nutritionists only see assessments of their assigned clients
+        if ($request->user()->hasRole('nutritionist') && !$request->user()->hasRole('super_admin')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('assigned_nutritionist_id', $request->user()->id);
+            });
+        }
+
         // Search by user name or email
         if ($request->has('search')) {
             $search = $request->search;
@@ -60,9 +67,15 @@ class AssessmentController extends Controller
     /**
      * Display the specified assessment
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
         $assessment = Assessment::with(['user', 'recommendations'])->findOrFail($id);
+
+        if ($request->user()->hasRole('nutritionist') && !$request->user()->hasRole('super_admin')) {
+            if ((int) $assessment->user->assigned_nutritionist_id !== (int) $request->user()->id) {
+                return response()->json(['message' => 'No tienes acceso a esta valoración.'], 403);
+            }
+        }
 
         return response()->json($assessment);
     }

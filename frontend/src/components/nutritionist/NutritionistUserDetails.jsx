@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import AssessmentNotes from './AssessmentNotes';
 import api from '../../services/api';
 
@@ -71,6 +81,21 @@ const NutritionistUserDetails = () => {
     );
   }
 
+  const buildEvolutionData = (assessments) => {
+    return (assessments || [])
+      .slice()
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+      .map((item) => ({
+        date: new Date(item.created_at).toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+        }),
+        bmi: Number(item.bmi) || 0,
+        weight: Number(item.weight) || 0,
+        get: Number(item.get) || 0,
+      }));
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -91,12 +116,28 @@ const NutritionistUserDetails = () => {
       {/* User Info Card */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
         <div className="flex items-start gap-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-            {user.name?.charAt(0).toUpperCase()}
+          <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+            {user.profile?.photo ? (
+              <img
+                src={user.profile.photo}
+                alt={user.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span>{user.name?.charAt(0).toUpperCase()}</span>
+            )}
           </div>
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">{user.name}</h2>
             <p className="text-gray-600 mb-4">{user.email}</p>
+            {user.profile?.notes && (
+              <div className="mt-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+                <p className="text-xs font-semibold text-blue-800 mb-1">
+                  Nota del usuario para su nutricionista
+                </p>
+                <p className="text-sm text-blue-900 whitespace-pre-line">{user.profile.notes}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -126,6 +167,48 @@ const NutritionistUserDetails = () => {
           </p>
         </div>
       </div>
+
+      {/* Evolution Chart */}
+      {user.assessments && user.assessments.length > 1 && (
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Evolución del cliente</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Cambios en IMC, peso y GET a lo largo de las valoraciones.
+          </p>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={buildEvolutionData(user.assessments)}
+                margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                <Tooltip
+                  formatter={(value, name) => {
+                    if (name === 'bmi') return [Number(value).toFixed(1), 'IMC'];
+                    if (name === 'weight') return [`${value} kg`, 'Peso'];
+                    if (name === 'get') return [`${value} kcal`, 'GET'];
+                    return [value, name];
+                  }}
+                  labelFormatter={(label) => `Fecha: ${label}`}
+                />
+                <Legend
+                  formatter={(value) => {
+                    if (value === 'bmi') return 'IMC';
+                    if (value === 'weight') return 'Peso';
+                    if (value === 'get') return 'GET';
+                    return value;
+                  }}
+                />
+                <Line type="monotone" dataKey="bmi" stroke="#4f46e5" strokeWidth={2} dot={false} name="IMC" />
+                <Line type="monotone" dataKey="weight" stroke="#22c55e" strokeWidth={2} dot={false} name="Peso" />
+                <Line type="monotone" dataKey="get" stroke="#f97316" strokeWidth={2} dot={false} name="GET" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       {/* Latest Assessment */}
       {user.stats?.latest_assessment && (

@@ -15,6 +15,10 @@ class UserProfile extends Model
         'preferences',
         'allergies',
         'goal',
+        'goal_description',
+        'target_weight',
+        'target_bmi',
+        'activity_goal_minutes',
         'experience_level',
         'notes',
     ];

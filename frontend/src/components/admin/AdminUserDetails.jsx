@@ -7,13 +7,24 @@ const AdminUserDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [nutritionists, setNutritionists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showRoleManager, setShowRoleManager] = useState(false);
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const isSuperAdmin = currentUser?.roles?.includes('super_admin');
 
   useEffect(() => {
     fetchUserDetails();
   }, [id]);
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      api.get('/admin/users', { params: { role: 'nutritionist', per_page: 200 } })
+        .then((res) => setNutritionists(res.data.data || []))
+        .catch(() => setNutritionists([]));
+    }
+  }, [isSuperAdmin]);
 
   const fetchUserDetails = async () => {
     try {
@@ -131,6 +142,32 @@ const AdminUserDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Asignar nutricionista (solo super admin; no aplica a super_admin ni nutricionista) */}
+      {isSuperAdmin && !(user.roles || []).includes('super_admin') && !(user.roles || []).includes('nutritionist') && (
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Nutricionista asignado</h3>
+          <p className="text-sm text-gray-600 mb-3">Asigna este usuario a un nutricionista para que solo ese profesional vea sus datos.</p>
+          <select
+            value={user.assigned_nutritionist_id ?? ''}
+            onChange={async (e) => {
+              const val = e.target.value || null;
+              try {
+                await api.put(`/admin/users/${user.id}`, { assigned_nutritionist_id: val });
+                setUser((u) => ({ ...u, assigned_nutritionist_id: val ? Number(val) : null }));
+              } catch (err) {
+                alert(err.response?.data?.message || 'Error al asignar');
+              }
+            }}
+            className="w-full max-w-md border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">Sin asignar</option>
+            {nutritionists.map((n) => (
+              <option key={n.id} value={n.id}>{n.name} ({n.email})</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

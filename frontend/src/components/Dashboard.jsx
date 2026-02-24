@@ -1,10 +1,35 @@
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { BarChart3 } from 'lucide-react';
 
 function Dashboard({ user, onLogout }) {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState('');
+  const [lastAssessment, setLastAssessment] = useState(null);
+
+  useEffect(() => {
+    const fetchProfileAndLastAssessment = async () => {
+      try {
+        setProfileLoading(true);
+        const [profileRes, assessmentsRes] = await Promise.all([api.get('/user/profile'), api.get('/assessments')]);
+        setProfile(profileRes.data || null);
+        const assessments = assessmentsRes.data || [];
+        setLastAssessment(assessments.length > 0 ? assessments[0] : null);
+        setProfileError('');
+      } catch (err) {
+        console.error(err);
+        setProfileError(err.response?.data?.message || 'No se pudo cargar tu perfil');
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchProfileAndLastAssessment();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -31,7 +56,27 @@ function Dashboard({ user, onLogout }) {
                 FitBalance
               </h1>
             </div>
-            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4">
+                <Link
+                  to="/profile"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:shadow-md"
+                >
+                  Perfil
+                </Link>
+                <div className="hidden sm:flex items-center space-x-2 px-4 py-2 bg-indigo-50 rounded-full">
+                  <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full overflow-hidden flex items-center justify-center text-white font-semibold text-sm">
+                    {profile?.photo ? (
+                      <img
+                        src={profile.photo}
+                        alt={user.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span>{user.name.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <span className="text-gray-700 font-medium">{user.name}</span>
+                </div>
               {(user.roles?.includes('super_admin') || user.roles?.includes('admin')) && (
                 <Link
                   to="/admin/dashboard"
@@ -48,12 +93,6 @@ function Dashboard({ user, onLogout }) {
                   Panel Nutricionista
                 </Link>
               )}
-              <div className="hidden sm:flex items-center space-x-2 px-4 py-2 bg-indigo-50 rounded-full">
-                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
-                <span className="text-gray-700 font-medium">{user.name}</span>
-              </div>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:shadow-md"
@@ -204,6 +243,58 @@ function Dashboard({ user, onLogout }) {
                   Determina las calorías totales considerando tu nivel de actividad física diaria
                 </p>
               </div>
+            </div>
+          </div>
+
+          {/* Perfil (resumen) */}
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100 lg:col-span-2">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Perfil</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Completa tus datos (preferencias, alergias, objetivos) en un único lugar.
+              </p>
+
+              {profileError && (
+                <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                  {profileError}
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  to="/profile"
+                  className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  Ir a mi perfil
+                </Link>
+                <span className="text-sm text-gray-600">
+                  {profileLoading ? 'Cargando...' : 'Edita tus datos y objetivos'}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Progreso actual</h3>
+              {lastAssessment && profile?.target_weight ? (
+                <>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Último peso:{' '}
+                    <span className="font-semibold text-gray-900">{lastAssessment.weight} kg</span>
+                    {' · '}Objetivo:{' '}
+                    <span className="font-semibold text-gray-900">{profile.target_weight} kg</span>
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    Diferencia:{' '}
+                    <span className="font-semibold">
+                      {(Number(lastAssessment.weight) - Number(profile.target_weight)).toFixed(1)} kg
+                    </span>
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-gray-600">
+                  Define un peso objetivo en tu perfil y realiza al menos una valoración.
+                </p>
+              )}
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AssessmentController;
+use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\RecommendationController;
 use App\Http\Controllers\Api\Admin\DashboardController;
 use App\Http\Controllers\Api\Admin\UserController;
@@ -19,6 +20,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+
+        // User profile & goals
+        Route::get('/user/profile', [UserProfileController::class, 'show']);
+        Route::put('/user/profile', [UserProfileController::class, 'update']);
 
     // Assessment routes (user)
     Route::apiResource('assessments', AssessmentController::class);

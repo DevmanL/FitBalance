@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3, ClipboardList, Zap, Flame, TrendingUp, TrendingDown, Scale, Apple, Dumbbell } from 'lucide-react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import AssessmentNotesView from './AssessmentNotesView';
 import api from '../services/api';
 
@@ -47,6 +57,21 @@ function AssessmentHistory({ user }) {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const buildEvolutionData = (data) => {
+    return [...data]
+      .slice()
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+      .map((item) => ({
+        date: new Date(item.created_at).toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+        }),
+        bmi: Number(item.bmi) || 0,
+        weight: Number(item.weight) || 0,
+        get: Number(item.get) || 0,
+      }));
   };
 
   if (loading) {
@@ -262,63 +287,101 @@ function AssessmentHistory({ user }) {
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {assessments.map((assessment, index) => {
-              const bmiValue = Number(assessment.bmi) || 0;
-              const bmiCategory = getBMICategory(bmiValue);
-              return (
-                <div
-                  key={assessment.id}
-                  className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 transform hover:-translate-y-1 animate-fade-in"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                  onClick={() => setSelectedAssessment(assessment)}
-                >
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className={`w-12 h-12 bg-gradient-to-br ${bmiCategory.bgColor} rounded-xl flex items-center justify-center text-white font-bold shadow-md`}>
-                          {bmiValue.toFixed(1)}
+          <>
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100 mb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Evolución de tu progreso</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Visualiza cómo han cambiado tu peso, IMC y GET a lo largo del tiempo.
+              </p>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={buildEvolutionData(assessments)} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                    <Tooltip
+                      formatter={(value, name) => {
+                        if (name === 'bmi') return [Number(value).toFixed(1), 'IMC'];
+                        if (name === 'weight') return [`${value} kg`, 'Peso'];
+                        if (name === 'get') return [`${value} kcal`, 'GET'];
+                        return [value, name];
+                      }}
+                      labelFormatter={(label) => `Fecha: ${label}`}
+                    />
+                    <Legend
+                      formatter={(value) => {
+                        if (value === 'bmi') return 'IMC';
+                        if (value === 'weight') return 'Peso';
+                        if (value === 'get') return 'GET';
+                        return value;
+                      }}
+                    />
+                    <Line type="monotone" dataKey="bmi" stroke="#4f46e5" strokeWidth={2} dot={false} name="IMC" />
+                    <Line type="monotone" dataKey="weight" stroke="#22c55e" strokeWidth={2} dot={false} name="Peso" />
+                    <Line type="monotone" dataKey="get" stroke="#f97316" strokeWidth={2} dot={false} name="GET" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {assessments.map((assessment, index) => {
+                const bmiValue = Number(assessment.bmi) || 0;
+                const bmiCategory = getBMICategory(bmiValue);
+                return (
+                  <div
+                    key={assessment.id}
+                    className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 transform hover:-translate-y-1 animate-fade-in"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                    onClick={() => setSelectedAssessment(assessment)}
+                  >
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className={`w-12 h-12 bg-gradient-to-br ${bmiCategory.bgColor} rounded-xl flex items-center justify-center text-white font-bold shadow-md`}>
+                            {bmiValue.toFixed(1)}
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900">
+                              {formatDate(assessment.created_at)}
+                            </h3>
+                            <p className="text-sm text-gray-500">{bmiCategory.label}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900">
-                            {formatDate(assessment.created_at)}
-                          </h3>
-                          <p className="text-sm text-gray-500">{bmiCategory.label}</p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                          <div className="bg-purple-50 p-3 rounded-lg">
+                            <p className="text-xs text-purple-600 font-medium mb-1">GEB</p>
+                            <p className="text-lg font-bold text-purple-900">{assessment.geb} kcal</p>
+                          </div>
+                          <div className="bg-orange-50 p-3 rounded-lg">
+                            <p className="text-xs text-orange-600 font-medium mb-1">GET</p>
+                            <p className="text-lg font-bold text-orange-900">{assessment.get} kcal</p>
+                          </div>
+                          <div className="bg-green-50 p-3 rounded-lg">
+                            <p className="text-xs text-green-600 font-medium mb-1">Balance</p>
+                            <p className="text-lg font-bold text-green-900">
+                              {assessment.caloric_balance > 0 ? '+' : ''}
+                              {assessment.caloric_balance} kcal
+                            </p>
+                          </div>
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <p className="text-xs text-gray-600 font-medium mb-1">Peso</p>
+                            <p className="text-lg font-bold text-gray-900">{assessment.weight} kg</p>
+                          </div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                        <div className="bg-purple-50 p-3 rounded-lg">
-                          <p className="text-xs text-purple-600 font-medium mb-1">GEB</p>
-                          <p className="text-lg font-bold text-purple-900">{assessment.geb} kcal</p>
-                        </div>
-                        <div className="bg-orange-50 p-3 rounded-lg">
-                          <p className="text-xs text-orange-600 font-medium mb-1">GET</p>
-                          <p className="text-lg font-bold text-orange-900">{assessment.get} kcal</p>
-                        </div>
-                        <div className="bg-green-50 p-3 rounded-lg">
-                          <p className="text-xs text-green-600 font-medium mb-1">Balance</p>
-                          <p className="text-lg font-bold text-green-900">
-                            {assessment.caloric_balance > 0 ? '+' : ''}
-                            {assessment.caloric_balance} kcal
-                          </p>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                          <p className="text-xs text-gray-600 font-medium mb-1">Peso</p>
-                          <p className="text-lg font-bold text-gray-900">{assessment.weight} kg</p>
-                        </div>
+                      <div className="flex items-center text-indigo-600 font-semibold group">
+                        Ver detalles
+                        <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
                       </div>
-                    </div>
-                    <div className="flex items-center text-indigo-600 font-semibold group">
-                      Ver detalles
-                      <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>

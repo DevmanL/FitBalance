@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'assigned_nutritionist_id',
     ];
 
     /**
@@ -62,5 +63,21 @@ class User extends Authenticatable
     public function profile()
     {
         return $this->hasOne(UserProfile::class);
+    }
+
+    /**
+     * Get the nutritionist assigned to this user (client).
+     */
+    public function assignedNutritionist()
+    {
+        return $this->belongsTo(User::class, 'assigned_nutritionist_id');
+    }
+
+    /**
+     * Get the clients assigned to this user (when user is a nutritionist).
+     */
+    public function clients()
+    {
+        return $this->hasMany(User::class, 'assigned_nutritionist_id');
     }
 }
