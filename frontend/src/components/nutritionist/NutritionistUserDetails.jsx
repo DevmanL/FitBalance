@@ -19,6 +19,7 @@ const NutritionistUserDetails = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [period, setPeriod] = useState('all'); // all, 12m, 6m
 
   useEffect(() => {
     fetchUserDetails();
@@ -82,8 +83,24 @@ const NutritionistUserDetails = () => {
   }
 
   const buildEvolutionData = (assessments) => {
+    const now = new Date();
+    let cutoff = null;
+
+    if (period === '12m') {
+      cutoff = new Date(now);
+      cutoff.setFullYear(cutoff.getFullYear() - 1);
+    } else if (period === '6m') {
+      cutoff = new Date(now);
+      cutoff.setMonth(cutoff.getMonth() - 6);
+    }
+
     return (assessments || [])
       .slice()
+      .filter((item) => {
+        if (!cutoff) return true;
+        const d = new Date(item.created_at);
+        return d >= cutoff;
+      })
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
       .map((item) => ({
         date: new Date(item.created_at).toLocaleDateString('es-ES', {
@@ -171,10 +188,23 @@ const NutritionistUserDetails = () => {
       {/* Evolution Chart */}
       {user.assessments && user.assessments.length > 1 && (
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Evolución del cliente</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Cambios en IMC, peso y GET a lo largo de las valoraciones.
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Evolución del cliente</h3>
+              <p className="text-sm text-gray-600">
+                Cambios en IMC, peso y GET a lo largo de las valoraciones.
+              </p>
+            </div>
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            >
+              <option value="all">Todo el historial</option>
+              <option value="12m">Últimos 12 meses</option>
+              <option value="6m">Últimos 6 meses</option>
+            </select>
+          </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
