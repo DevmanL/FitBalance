@@ -56,8 +56,9 @@ function Dashboard({ user, onLogout }) {
                   className="w-full h-full object-contain p-1"
                 />
               </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                FitBalance
+              <h1 className="text-2xl font-bold">
+                <span style={{ color: '#0f172a' }}>Fit</span>
+                <span style={{ color: '#475569' }}>Balance</span>
               </h1>
             </div>
               <div className="flex items-center space-x-4">
@@ -113,7 +114,7 @@ function Dashboard({ user, onLogout }) {
           {/* Hero Section */}
           <div className="text-center mb-12 animate-fade-in">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Bienvenido a <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">FitBalance</span>
+              Bienvenido a <span style={{ color: '#0f172a' }}>Fit</span><span style={{ color: '#475569' }}>Balance</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Realiza valoraciones morfofuncionales completas y obtén recomendaciones personalizadas para tu bienestar

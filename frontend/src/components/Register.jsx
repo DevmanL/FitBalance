@@ -42,23 +42,24 @@ function Register({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Logo y título */}
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-2xl transform hover:scale-110 transition-transform duration-300">
-              <span className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                F
-              </span>
+            <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-2xl transform hover:scale-110 transition-transform duration-300 overflow-hidden p-2">
+              <img src="/FB.png" alt="FitBalance" className="w-full h-full object-contain" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">FitBalance</h1>
-          <p className="text-indigo-100 text-lg">Crea tu cuenta</p>
+          <h1 className="text-4xl font-bold mb-2">
+            <span style={{ color: '#0f172a' }}>Fit</span>
+            <span style={{ color: '#475569' }}>Balance</span>
+          </h1>
+          <p className="text-gray-700 text-lg">Crea tu cuenta</p>
         </div>
 
         {/* Formulario */}
-        <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/20">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
           {error && (
             <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg animate-shake">
               <div className="flex items-center">
